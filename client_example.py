@@ -5,7 +5,6 @@ import logging
 import argparse
 import random
 import pickle
-import zlib
 import math
 from ipaddress import ip_address
 from utils import check_port, work
@@ -28,15 +27,11 @@ def main(args, mu=0.01, sigma=0.005):
         logger.info('Request some remote function (RPC)')
         # use pickle to dump a object
         p = pickle.dumps('rpc '+str(i))
-        # compress the object
-        z = zlib.compress(p)
         # send it
-        socket.send(z)
+        socket.send(p)
 
         # receive a compress object
-        z = socket.recv()
-        # decompress it
-        p = zlib.decompress(z)
+        p = socket.recv()
         # use pickle to load the object
         o = pickle.loads(p)
         logger.info('Received %s', o)

@@ -4,7 +4,6 @@ import zmq
 import logging
 import argparse
 import threading
-import zlib
 import pickle
 import random
 import math
@@ -37,9 +36,7 @@ class Worker(threading.Thread):
         self.logger.info('Start working')
         while True:
             # receive a compress object
-            z = self.socket.recv()
-            # decompress it
-            p = zlib.decompress(z)
+            p = self.socket.recv()
             # use pickle to load the object
             o = pickle.loads(p)
 
@@ -53,10 +50,8 @@ class Worker(threading.Thread):
 
             # use pickle to dump a object
             p = pickle.dumps('ACK')
-            # compress the object
-            z = zlib.compress(p)
             # send it
-            self.socket.send(z)
+            self.socket.send(p)
         # close the socket
         self.socket.close()
 
