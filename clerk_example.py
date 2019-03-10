@@ -3,7 +3,7 @@
 import logging
 import pickle
 import zmq
-from utils import ORDER, PICKUP 
+from utils import work, REQ_TASK, TASK_READY
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -12,29 +12,33 @@ logging.basicConfig(level=logging.DEBUG,
 
 def main(ip, port):
     # create a logger for the client
-    logger = logging.getLogger('Client')
+    logger = logging.getLogger('Clerk')
     # setup zmq
     logger.info('Setup ZMQ')
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     socket.connect('tcp://{}:{}'.format(ip, port))
 
-    logger.info('Request some food')
-    p = pickle.dumps({"method": ORDER, "args": {"hamburger": 1}})
-    socket.send(p)
-
-    p = socket.recv()
-    o = pickle.loads(p)
-    logger.info('Received %s', o)
-
-
-    logger.info('Pickup order %s', o)
-    p = pickle.dumps({"method": PICKUP, "args": o})
-    socket.send(p)
-
-    p = socket.recv()
-    o = pickle.loads(p)
-    logger.info('Got %s', o)
+    while True:
+        logger.info('Request Task')
+        p = pickle.dumps({"method": REQ_TASK})
+        socket.send(p)
+    
+        p = socket.recv()
+        o = pickle.loads(p)
+        logger.info('Received %s', o)
+    
+        work(3)
+   
+        logger.info("Task Ready")
+        p = pickle.dumps({"method": TASK_READY, "args": o})
+        socket.send(p)
+    
+        p = socket.recv()
+        o = pickle.loads(p)
+    
+        if not o:
+            break
 
     socket.close()
     context.term()
